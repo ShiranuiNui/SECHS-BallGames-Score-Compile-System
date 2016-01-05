@@ -1,5 +1,5 @@
 ﻿//球技大会得点集計プログラム　Ver.2
-//Created By ShiranuiNui---
+//Created By ShiranuiNui
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +11,7 @@ using System.Diagnostics;
 namespace 球技大会得点集計プログラムVer._2.a
 {
     [Serializable()]
-    class PointData
+    class PointData//得点データ本体クラス
     {
         public string GroupLocation { get; set; } = "";
         public int Point { get; set; } = 0;
@@ -21,13 +21,13 @@ namespace 球技大会得点集計プログラムVer._2.a
     {
     }
     [Serializable()]
-    class SavingDataBase
+    class SavingDataBase//セーブ時に一時的にデータをまとめるクラス
     {
-        public object VolleyBall;
+        public Dictionary<string, PointData> VolleyBall;
     }
     class Program
     {
-        static readonly string[] CLASSLOOPER = new string[]
+        static readonly string[] CLASSLOOPER = new string[]//クラスをループさせる時に使う定数
         {"1A","1B","1C","1D","1E","1F","1G","1H", "2A", "2B", "2C", "2D", "2E", "2F", "2G", "2H", "3A", "3B", "3C", "3D", "3E", "3F", "3G", "3H" };
 
         private static Dictionary<string, PointData> VolleyBall;
@@ -35,19 +35,18 @@ namespace 球技大会得点集計プログラムVer._2.a
         static void Main(string[] args)
         {
             Console.WriteLine("～球技大会得点集計プログラムVer.2～");
-            DisableCloseButton();
-            try
+            ShiraAuxiliarySys.DisableCloseButton();//閉じるボタンを無効化
+            try　//セーブしてあるファイルを読み込む
             {
                 String CurrentDir = System.Reflection.Assembly.GetExecutingAssembly().Location;
                 string path = CurrentDir + @"\..\球技大会データ.db";
                 FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read);
                 BinaryFormatter f = new BinaryFormatter();
-                //読み込んで逆シリアル化する
                 SavingDataBase InDataBase = (SavingDataBase)f.Deserialize(fs);
                 fs.Close();
                 VolleyBall = (Dictionary<string, PointData>)InDataBase.VolleyBall;
             }
-            catch
+            catch //セーブしてあるファイルが無かったら初期化して生成
             {
                 Console.WriteLine("初期化中……");
 
@@ -58,14 +57,15 @@ namespace 球技大会得点集計プログラムVer._2.a
                 }
                 Console.WriteLine("初期化処理正常終了！");
             }
-            for (;;)
+            for (;;)//ここからメインプログラム。無限ループにしてある
             {
                 Console.WriteLine("処理種目別コードを入力し、Enterキーを押してください");
                 Console.WriteLine("バレーボール→1");//制作中
-                Console.WriteLine("全データの初期化→5");//未実装
-                Console.WriteLine("プログラムの終了→6");//実装済み
+                Console.WriteLine("現在の集計結果の表示→5");//未実装
+                Console.WriteLine("全データの初期化→6");//未実装
+                Console.WriteLine("プログラムの終了→7");//実装済み
                 string strInputKey = Console.ReadLine();
-                int intInputKey = ShiraConv.StrIntConv(strInputKey);
+                int intInputKey = ShiraAuxiliarySys.StrIntConv(strInputKey);
                 //int intInputKey = 5;//Debug
                 switch (intInputKey)
                 {
@@ -73,24 +73,25 @@ namespace 球技大会得点集計プログラムVer._2.a
                         Console.WriteLine();
                         VolleyBallMode();
                         break;
-                    case 6:
+                    case 7:
                         Console.WriteLine();
                         ExitMode();
                         break;
                 }
             }
         }
-        static void VolleyBallMode()
+        static void VolleyBallMode()//バレーボール処理モード
         {
             Console.WriteLine("バレーボールモードに移行しました。処理別コードを入力してください");
             for (bool IsExit = false; IsExit == false;)
             {
                 Console.WriteLine("点数の入力→1");//未実装
-                Console.WriteLine("クラスの設定→2");//未実装
-                Console.WriteLine("初期化→3");//実装済み
-                Console.WriteLine("処理種目別コード入力画面に戻る→4");//実装済み
+                Console.WriteLine("現在の集計結果の表示→2");//未実装
+                Console.WriteLine("クラスの設定→3");//未実装
+                Console.WriteLine("初期化→4");//実装済み
+                Console.WriteLine("処理種目別コード入力画面に戻る→5");//実装済み
                 string strInputKey = Console.ReadLine();
-                int intInputKey = ShiraConv.StrIntConv(strInputKey);
+                int intInputKey = ShiraAuxiliarySys.StrIntConv(strInputKey);
                 //int intInputKey = 5;//Debug
                 switch (intInputKey)
                 {
@@ -99,6 +100,8 @@ namespace 球技大会得点集計プログラムVer._2.a
                     case 2:
                         break;
                     case 3:
+                        break;
+                    case 4:
                         Console.WriteLine();
                         VolleyBall.Clear();
                         for (int i = 0; i < 24; i++)
@@ -108,7 +111,7 @@ namespace 球技大会得点集計プログラムVer._2.a
                         Console.WriteLine("初期化処理正常終了！");
                         Console.WriteLine();
                         break;
-                    case 4:
+                    case 5:
                         IsExit = true;
                         Console.WriteLine();
                         break;
@@ -117,7 +120,7 @@ namespace 球技大会得点集計プログラムVer._2.a
                 //string kekka = VolleyBall.Where(y => y.Value.GroupLocation == "A1").Select(x => x.Key).First();
             }
         }
-        static void ExitMode()
+        static void ExitMode()//終了処理モード
         {
             SavingDataBase SavingDataBase = new SavingDataBase();
             SavingDataBase.VolleyBall = VolleyBall;
@@ -129,31 +132,9 @@ namespace 球技大会得点集計プログラムVer._2.a
             fs.Close();
             Environment.Exit(0);
         }
-        //閉じるボタン無効化API処理↓
-        [DllImport("USER32.DLL")]
-        private static extern IntPtr
-          GetSystemMenu(IntPtr hWnd, UInt32 bRevert);
-        [DllImport("USER32.DLL")]
-        private static extern UInt32
-          RemoveMenu(IntPtr hMenu, UInt32 nPosition, UInt32 wFlags);
-        public static void DisableCloseButton()
-        {
-            UInt32 SC_CLOSE = 0x0000F060;
-            UInt32 MF_BYCOMMAND = 0x00000000;
-
-            IntPtr hWnd = Process.GetCurrentProcess().MainWindowHandle;
-
-            if (hWnd != IntPtr.Zero)
-            {
-                IntPtr hMenu = GetSystemMenu(hWnd, 0);
-                RemoveMenu(hMenu, SC_CLOSE, MF_BYCOMMAND);
-            }
-        }
-        //ここまで↑
     }
-
 }
-static class ShiraConv
+static class ShiraAuxiliarySys//補助的な処理を詰め込んでるだけ
 {
     public static int StrIntConv(string str)
     {
@@ -161,6 +142,28 @@ static class ShiraConv
         int outint = int.Parse(str);
         return outint;
     }
+
+    //閉じるボタン無効化API処理↓
+    [DllImport("USER32.DLL")]
+    private static extern IntPtr
+      GetSystemMenu(IntPtr hWnd, UInt32 bRevert);
+    [DllImport("USER32.DLL")]
+    private static extern UInt32
+      RemoveMenu(IntPtr hMenu, UInt32 nPosition, UInt32 wFlags);
+    public static void DisableCloseButton()
+    {
+        UInt32 SC_CLOSE = 0x0000F060;
+        UInt32 MF_BYCOMMAND = 0x00000000;
+
+        IntPtr hWnd = Process.GetCurrentProcess().MainWindowHandle;
+
+        if (hWnd != IntPtr.Zero)
+        {
+            IntPtr hMenu = GetSystemMenu(hWnd, 0);
+            RemoveMenu(hMenu, SC_CLOSE, MF_BYCOMMAND);
+        }
+    }
+    //ここまで↑
 
 }
 
