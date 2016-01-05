@@ -99,7 +99,7 @@ namespace 球技大会得点集計プログラムVer._2.a
             Console.WriteLine("バレーボールモードに移行しました。処理別コードを入力してください");
             for (bool IsExit = false; IsExit == false;)
             {
-                Console.WriteLine("点数の入力→1");//詳細情報待ち、TODO:誤入力時の戻る機能実装
+                Console.WriteLine("点数の入力→1");//詳細情報待ち
                 Console.WriteLine("現在の集計結果の表示→2");//詳細情報、上の完成待ち
                 Console.WriteLine("クラスの設定→3");//実装済み
                 Console.WriteLine("初期化→4");//実装済み
