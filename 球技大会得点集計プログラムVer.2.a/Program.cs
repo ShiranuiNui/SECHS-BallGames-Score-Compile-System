@@ -26,6 +26,7 @@ namespace 球技大会得点集計プログラムVer._2.a
         public string LeftClassGroup { get; set; }
         public string RightClassGroup { get; set; }
         public bool IsEND { get; set; } = false;
+        public bool IsNotElimination { get; set; } = false;
     }
     [Serializable()]
     class SavingDataBase//セーブ時に一時的にデータをまとめるクラス
@@ -41,8 +42,7 @@ namespace 球技大会得点集計プログラムVer._2.a
         {"A1","A2","A3","B1","B2","B3","C1","C2","C3","D1","D2","D3","E1","E2","E3","F1","F2","F3","G1","G2","G3","H1","H2","H3",};
         static readonly string[] GAMETABLELOOPER = new string[]
         {"1A","2A","3A","4A","5A","6A","1B","2B","3B","4B","5B","6B","1C","2C","3C","4C","5C","6C","1D","2D","3D","4D","5D","6D",};
-        static readonly string[] GAMETABLEAUXLOOPER = new string[] { "A", "B", "C", "D", "E", "F", "G", "H" };
-        //A1vsA2 A2vsA3 A3vsA1
+
         private static Dictionary<string, PointData> VolleyBall;
         private static Dictionary<string, GameTable> VolleyGameTable;
 
@@ -59,7 +59,7 @@ namespace 球技大会得点集計プログラムVer._2.a
                 SavingDataBase InDataBase = (SavingDataBase)f.Deserialize(fs);
                 fs.Close();
                 VolleyBall = (Dictionary<string, PointData>)InDataBase.VolleyBall;
-                VolleyGameTable = (Dictionary<string,GameTable>)InDataBase.VolleyGameTable;
+                VolleyGameTable = (Dictionary<string, GameTable>)InDataBase.VolleyGameTable;
             }
             catch //セーブしてあるファイルが無かったら初期化して生成
             {
@@ -69,8 +69,8 @@ namespace 球技大会得点集計プログラムVer._2.a
             {
                 Console.WriteLine("処理種目別コードを入力し、Enterキーを押してください");
                 Console.WriteLine("バレーボール→1");//制作中
-                Console.WriteLine("現在の集計結果の表示→5");//未実装
-                Console.WriteLine("全データの初期化→6");//未実装
+                Console.WriteLine("現在の集計結果の表示→5");//種目追加待ち
+                Console.WriteLine("全データの初期化→6");//種目追加待ち
                 Console.WriteLine("プログラムの終了→7");//実装済み
                 string strInputKey = Console.ReadLine();
                 int intInputKey = ShiraAuxiliarySys.StrIntConv(strInputKey);
@@ -78,8 +78,10 @@ namespace 球技大会得点集計プログラムVer._2.a
                 switch (intInputKey)
                 {
                     case 1:
-                        Console.WriteLine();
                         VolleyBallMode();
+                        break;
+                    case 5:
+                        CompileShowMode();
                         break;
                     case 6:
                         InitializeMode();
@@ -93,32 +95,65 @@ namespace 球技大会得点集計プログラムVer._2.a
         }
         static void VolleyBallMode()//バレーボール処理モード
         {
+            Console.WriteLine();
             Console.WriteLine("バレーボールモードに移行しました。処理別コードを入力してください");
             for (bool IsExit = false; IsExit == false;)
             {
-                Console.WriteLine("点数の入力→1");//未実装
-                Console.WriteLine("現在の集計結果の表示→2");//未実装
+                Console.WriteLine("点数の入力→1");//詳細情報待ち、TODO:誤入力時の戻る機能実装
+                Console.WriteLine("現在の集計結果の表示→2");//詳細情報、上の完成待ち
                 Console.WriteLine("クラスの設定→3");//実装済み
                 Console.WriteLine("初期化→4");//実装済み
                 Console.WriteLine("処理種目別コード入力画面に戻る→5");//実装済み
-                Console.WriteLine();
                 string strInputKey = Console.ReadLine();
                 int intInputKey = ShiraAuxiliarySys.StrIntConv(strInputKey);
+                Console.WriteLine();
                 //int intInputKey = 5;//Debug
                 switch (intInputKey)
                 {
                     case 1:
-                        Console.WriteLine("試合を選択して下さい");
-                        var GameName = VolleyGameTable.Where(x => x.Value.IsEND == false).Select(x => x.Key).ToArray();
-                        var LeftClassGroup = VolleyGameTable.Where(x => x.Value.IsEND == false).Select(x => x.Value.LeftClassGroup).ToArray();
-                        var RightClassGroup = VolleyGameTable.Where(x => x.Value.IsEND == false).Select(x => x.Value.RightClassGroup).ToArray();
-                        //コート（ゲーム名）,左クラス,右クラス
-                        for(int i = 0; i < GameName.Count();i++)
+
+                        string[] GameName = VolleyGameTable.Where(x => x.Value.IsEND == false).Select(x => x.Key).ToArray();//コート名の取得
+
+                        string[] LeftClassGroup = VolleyGameTable.Where(x => x.Value.IsEND == false).Select(x => x.Value.LeftClassGroup).ToArray();
+                        List<string> listLeftClassName = new List<string>();//クラス名の取得
+                        foreach (string strLeftClassPosition in LeftClassGroup)
                         {
-                            Console.WriteLine("{0}コート {1} vs {2} → {3}", GameName[i], LeftClassGroup[i], RightClassGroup[i], i);
+                            listLeftClassName.Add(VolleyBall.Where(x => x.Value.GroupLocation == strLeftClassPosition).Select(x => x.Key).First());
                         }
+
+                        string[] RightClassGroup = VolleyGameTable.Where(x => x.Value.IsEND == false).Select(x => x.Value.RightClassGroup).ToArray();
+                        List<string> listRightClassName = new List<string>();//クラス名の取得
+                        foreach (string strRightClassPosition in RightClassGroup)
+                        {
+                            listRightClassName.Add(VolleyBall.Where(x => x.Value.GroupLocation == strRightClassPosition).Select(x => x.Key).First());
+                        }
+
+                        for (int i = 0; i < GameName.Count(); i++)
+                        {
+
+                            Console.WriteLine("{0}コート 第{1}試合 {2} vs {3} → {4}", GameName[i].Substring(1), GameName[i].Substring(0, 1), listLeftClassName[i], listRightClassName[i], i);
+                        }
+                        Console.WriteLine("試合を選択して下さい");//コートの選択
+                        int inGameNumber = ShiraAuxiliarySys.StrIntConv(Console.ReadLine());
+
+                        Console.WriteLine("{0}の点数を入力してください", listLeftClassName[inGameNumber]);
+                        int LeftClassScore = ShiraAuxiliarySys.StrIntConv(Console.ReadLine());//点数の入力
+                        VolleyBall[listLeftClassName[inGameNumber]].Point += LeftClassScore;
+
+                        Console.WriteLine("{0}の点数を入力してください", listRightClassName[inGameNumber]);
+                        int RightClassScore = ShiraAuxiliarySys.StrIntConv(Console.ReadLine());//点数の入力
+                        VolleyBall[listRightClassName[inGameNumber]].Point += RightClassScore;
+
+                        Console.WriteLine("入力処理が正常に終了しました");
+                        VolleyGameTable[GameName[inGameNumber]].IsEND = true;
+                        Console.WriteLine();
                         break;
                     case 2:
+                        foreach (string Class in CLASSLOOPER)
+                        {
+                            Console.WriteLine("{0} : {1}", Class, VolleyBall[Class].Point);
+                        }
+                        Console.WriteLine();
                         break;
                     case 3:
                         Console.WriteLine("クラスを入力して下さい　例）1A");
@@ -135,15 +170,26 @@ namespace 球技大会得点集計プログラムVer._2.a
                         break;
                     case 5:
                         IsExit = true;
-                        Console.WriteLine();
                         break;
                 }
                 //VolleyBall["1A"].GroupLocation = "A1";
                 //string kekka = VolleyBall.Where(y => y.Value.GroupLocation == "A1").Select(x => x.Key).First();
                 //VolleyBall[VolleyBall.Where(y => y.Value.GroupLocation == "A1").Select(x => x.Key).First()]
             }
+        } //TODO:点数入力の完成
+        static void CompileShowMode()//総合得点表示モード TODO:種目追加
+        {
+            Console.WriteLine();
+            Dictionary<string, int> CompiledData = new Dictionary<string, int>();
+            foreach (string Class in CLASSLOOPER)
+            {
+                CompiledData.Add(Class, 0);
+                CompiledData[Class] += VolleyBall[Class].Point;
+                Console.WriteLine("{0} : {1}", Class, CompiledData[Class]);//TODO:種目が追加されたらここも追加
+            }
+            Console.WriteLine();
         }
-        static void InitializeMode()//初期化モード
+        static void InitializeMode()//初期化モード TODO:種目追加
         {
             if (VolleyBall != null)
             {
