@@ -1,5 +1,5 @@
 ﻿//球技大会得点集計プログラム　Ver.2
-//Created By ShiranuiNui
+//Created By ShiranuiNui---
 using System;
 using System.Collections.Generic;
 using System.Linq;
