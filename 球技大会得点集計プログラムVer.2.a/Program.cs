@@ -136,12 +136,15 @@ namespace 球技大会得点集計プログラムVer._2.a
                         Console.WriteLine("試合を選択して下さい");//コートの選択
                         int inGameNumber = ShiraAuxiliarySys.StrIntConv(Console.ReadLine());
 
+                        Console.WriteLine("試合選択をやり直す場合は0を入力して下さい");
                         Console.WriteLine("{0}の点数を入力してください", listLeftClassName[inGameNumber]);
                         int LeftClassScore = ShiraAuxiliarySys.StrIntConv(Console.ReadLine());//点数の入力
+                        if(LeftClassScore == 0) { Console.WriteLine(); break; }
                         VolleyBall[listLeftClassName[inGameNumber]].Point += LeftClassScore;
 
                         Console.WriteLine("{0}の点数を入力してください", listRightClassName[inGameNumber]);
                         int RightClassScore = ShiraAuxiliarySys.StrIntConv(Console.ReadLine());//点数の入力
+                        if (LeftClassScore == 0) { Console.WriteLine(); break; }
                         VolleyBall[listRightClassName[inGameNumber]].Point += RightClassScore;
 
                         Console.WriteLine("入力処理が正常に終了しました");
