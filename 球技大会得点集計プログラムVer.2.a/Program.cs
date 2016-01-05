@@ -142,7 +142,6 @@ static class ShiraAuxiliarySys//補助的な処理を詰め込んでるだけ
         int outint = int.Parse(str);
         return outint;
     }
-
     //閉じるボタン無効化API処理↓
     [DllImport("USER32.DLL")]
     private static extern IntPtr
@@ -154,9 +153,7 @@ static class ShiraAuxiliarySys//補助的な処理を詰め込んでるだけ
     {
         UInt32 SC_CLOSE = 0x0000F060;
         UInt32 MF_BYCOMMAND = 0x00000000;
-
         IntPtr hWnd = Process.GetCurrentProcess().MainWindowHandle;
-
         if (hWnd != IntPtr.Zero)
         {
             IntPtr hMenu = GetSystemMenu(hWnd, 0);
@@ -164,6 +161,5 @@ static class ShiraAuxiliarySys//補助的な処理を詰め込んでるだけ
         }
     }
     //ここまで↑
-
 }
 
