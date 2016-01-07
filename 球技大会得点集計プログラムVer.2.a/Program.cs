@@ -13,8 +13,8 @@ namespace 球技大会得点集計プログラムVer._2.a
     [Serializable()]
     class PointData//得点データ基底クラス
     {
-        public string GroupLocation { get; set; } = "";//クラスのグループ番号
-        public int Point { get; set; } = 0;//総得点
+        public string ClassName { get; set; } = "";//クラスのグループ番号
+        public int Point { get; set; } = 0;//総得点 TODO:これを使って決勝リーグ等を判定
         public int LostPoint { get; set; } = 0;//総失点
         public int WinLose { get; set; } = 0;//勝敗。+1が勝利、-1が敗北を意味する
     }
@@ -42,7 +42,6 @@ namespace 球技大会得点集計プログラムVer._2.a
     class SavingDataBase//セーブ時に一時的にデータをまとめるクラス
     {
         public Dictionary<string, VolleyBall> VolleyBall;
-        public Dictionary<string, GameTable> VolleyGameTable;
     }
     class Program
     {
@@ -52,9 +51,14 @@ namespace 球技大会得点集計プログラムVer._2.a
         {"A1","A2","A3","B1","B2","B3","C1","C2","C3","D1","D2","D3","E1","E2","E3","F1","F2","F3","G1","G2","G3","H1","H2","H3",};
         static readonly string[] GAMETABLELOOPER = new string[]
         {"1A","2A","3A","4A","5A","6A","1B","2B","3B","4B","5B","6B","1C","2C","3C","4C","5C","6C","1D","2D","3D","4D","5D","6D",};
+        static readonly string[] GROUPALPHABET = new string[]//VolleyBallData用に、グループでループさせる時に使う定数
+        {"A","B","C","D","E","F","G","H" };
 
-        public static Dictionary<string, VolleyBall> VolleyBall;
-        public static Dictionary<string, GameTable> VolleyGameTable;
+        
+
+        //public static Dictionary<string, VolleyBall> VolleyBall;//Key=クラス名 Value=バレーボール得点データクラス
+        //public static Dictionary<string, GameTable> VolleyGameTable;
+        public static Dictionary<string,VolleyBall> VolleyBallData;//Key=グループ名 Value=(Key=グループ内番号 Value=各クラス得点データ（VolleyBallクラス))
 
         static void Main(string[] args)
         {
@@ -68,8 +72,7 @@ namespace 球技大会得点集計プログラムVer._2.a
                 BinaryFormatter f = new BinaryFormatter();
                 SavingDataBase InDataBase = (SavingDataBase)f.Deserialize(fs);
                 fs.Close();
-                VolleyBall = InDataBase.VolleyBall;
-                VolleyGameTable = InDataBase.VolleyGameTable;
+                VolleyBallData = InDataBase.VolleyBall;
             }
             catch //セーブしてあるファイルが無かったら初期化して生成
             {
@@ -81,7 +84,7 @@ namespace 球技大会得点集計プログラムVer._2.a
                 Console.WriteLine("バレーボール→1");//制作中
                 Console.WriteLine("バスケットボール→2");//未着手
                 Console.WriteLine("卓球→3");//未着手
-                Console.WriteLine("ドッチボール→4");
+                Console.WriteLine("ドッチボール→4");//未着手
                 Console.WriteLine("現在の集計結果の表示→5");//種目追加待ち
                 Console.WriteLine("全データの初期化→6");//種目追加待ち
                 Console.WriteLine("プログラムの終了→7");//実装済み
@@ -90,9 +93,10 @@ namespace 球技大会得点集計プログラムVer._2.a
                 //int intInputKey = 5;//Debug
                 switch (intInputKey)
                 {
-                    case 1:
+                    /*case 1:
                         VolleyBallMode();
                         break;
+                        */
                     case 3:
                         TableTennis();
                         break;
@@ -115,7 +119,7 @@ namespace 球技大会得点集計プログラムVer._2.a
 
                 }
             }
-        }
+        }/*
         static void VolleyBallMode()//バレーボール処理モード TODO:集計の実装、クラス表示バグの修正
         {
             Console.WriteLine();
@@ -203,6 +207,7 @@ namespace 球技大会得点集計プログラムVer._2.a
                 //VolleyBall[VolleyBall.Where(y => y.Value.GroupLocation == "A1").Select(x => x.Key).First()]
             }
         } //TODO:点数入力の完成
+        */
         static void TableTennis()
         {
             Console.WriteLine();
@@ -223,46 +228,26 @@ namespace 球技大会得点集計プログラムVer._2.a
         static void CompileShowMode()//総合得点表示モード TODO:種目追加
         {
             Console.WriteLine();
-            Dictionary<string, int> CompiledData = new Dictionary<string, int>();
-            foreach (string Class in CLASSLOOPER)
+            //List<Dictionary<int, VolleyBall>> list = VolleyBallData.Select(x => x.Value).ToList();
+            List<int> VolleyPoint = new List<int>();
+            foreach(string Group in GROUPALPHABET)
             {
-                CompiledData.Add(Class, 0);
-                CompiledData[Class] += VolleyBall[Class].Point;
-                Console.WriteLine("{0} : {1}", Class, CompiledData[Class]);//TODO:種目が追加されたらここも追加
+                //VolleyPoint.Add()
             }
             Console.WriteLine();
         }
         static void InitializeMode()//初期化モード TODO:種目追加
         {
-            if (VolleyBall != null)
+            if (VolleyBallData != null)
             {
-                VolleyBall.Clear();
+                VolleyBallData.Clear();
             }
             Console.WriteLine();
             Console.WriteLine("初期化中……");
-            VolleyBall = new Dictionary<string, VolleyBall>();
-            for (int i = 0; i < 24; i++)
+            VolleyBallData = new Dictionary<string,  VolleyBall>();
+            foreach(string Group in GROUPALPHABET)
             {
-                VolleyBall.Add(CLASSLOOPER[i], new VolleyBall());
-                VolleyBall[CLASSLOOPER[i]].GroupLocation = GROUPLOOPER[i];
-            }
-            VolleyGameTable = new Dictionary<string, GameTable>();
-            string[] ABCDSortedGroupLooper = GROUPLOOPER.OrderBy(x => x.Substring(0, 1)).ToArray();
-            int iGroupID = 0;
-            for (int i = 0; i < 24; i++)
-            {
-                VolleyGameTable.Add(GAMETABLELOOPER[i], new GameTable());
-                VolleyGameTable[GAMETABLELOOPER[i]].LeftClassGroup = ABCDSortedGroupLooper[iGroupID + 0];
-                VolleyGameTable[GAMETABLELOOPER[i]].RightClassGroup = ABCDSortedGroupLooper[iGroupID + 1];
-                i++;
-                VolleyGameTable.Add(GAMETABLELOOPER[i], new GameTable());
-                VolleyGameTable[GAMETABLELOOPER[i]].LeftClassGroup = ABCDSortedGroupLooper[iGroupID + 1];
-                VolleyGameTable[GAMETABLELOOPER[i]].RightClassGroup = ABCDSortedGroupLooper[iGroupID + 2];
-                i++;
-                VolleyGameTable.Add(GAMETABLELOOPER[i], new GameTable());
-                VolleyGameTable[GAMETABLELOOPER[i]].LeftClassGroup = ABCDSortedGroupLooper[iGroupID + 2];
-                VolleyGameTable[GAMETABLELOOPER[i]].RightClassGroup = ABCDSortedGroupLooper[iGroupID + 0];
-                iGroupID += 3;
+                Enumerable.Range(1, 3).ToList().ForEach(x => VolleyBallData.Add(Group + x.ToString(), new VolleyBall()));
             }
             Console.WriteLine("初期化処理正常終了！");
             Console.WriteLine();
@@ -270,8 +255,7 @@ namespace 球技大会得点集計プログラムVer._2.a
         static void ExitMode()//終了処理モード
         {
             SavingDataBase SavingDataBase = new SavingDataBase();
-            SavingDataBase.VolleyBall = VolleyBall;
-            SavingDataBase.VolleyGameTable = VolleyGameTable;
+            SavingDataBase.VolleyBall = VolleyBallData;
             String CurrentDir = System.Reflection.Assembly.GetExecutingAssembly().Location;
             string path = CurrentDir + @"\..\球技大会データ.db";
             FileStream fs = new FileStream(path, FileMode.Create, FileAccess.Write);
@@ -319,30 +303,7 @@ static class DebugMode
 {
     public static void VolleyBallSet2015()
     {
-        球技大会得点集計プログラムVer._2.a.Program.VolleyBall["2A"].GroupLocation = "A1";
-        球技大会得点集計プログラムVer._2.a.Program.VolleyBall["3E"].GroupLocation = "A2";
-        球技大会得点集計プログラムVer._2.a.Program.VolleyBall["3H"].GroupLocation = "A3";
-        球技大会得点集計プログラムVer._2.a.Program.VolleyBall["3F"].GroupLocation = "B1";
-        球技大会得点集計プログラムVer._2.a.Program.VolleyBall["3B"].GroupLocation = "B2";
-        球技大会得点集計プログラムVer._2.a.Program.VolleyBall["3A"].GroupLocation = "B3";
-        球技大会得点集計プログラムVer._2.a.Program.VolleyBall["1A"].GroupLocation = "C1";
-        球技大会得点集計プログラムVer._2.a.Program.VolleyBall["1F"].GroupLocation = "C2";
-        球技大会得点集計プログラムVer._2.a.Program.VolleyBall["2E"].GroupLocation = "C3";
-        球技大会得点集計プログラムVer._2.a.Program.VolleyBall["3C"].GroupLocation = "D1";
-        球技大会得点集計プログラムVer._2.a.Program.VolleyBall["3G"].GroupLocation = "D2";
-        球技大会得点集計プログラムVer._2.a.Program.VolleyBall["1D"].GroupLocation = "D3";
-        球技大会得点集計プログラムVer._2.a.Program.VolleyBall["3D"].GroupLocation = "E1";
-        球技大会得点集計プログラムVer._2.a.Program.VolleyBall["2G"].GroupLocation = "E2";
-        球技大会得点集計プログラムVer._2.a.Program.VolleyBall["1H"].GroupLocation = "E3";
-        球技大会得点集計プログラムVer._2.a.Program.VolleyBall["1B"].GroupLocation = "F1";
-        球技大会得点集計プログラムVer._2.a.Program.VolleyBall["2C"].GroupLocation = "F2";
-        球技大会得点集計プログラムVer._2.a.Program.VolleyBall["2D"].GroupLocation = "F3";
-        球技大会得点集計プログラムVer._2.a.Program.VolleyBall["1E"].GroupLocation = "G1";
-        球技大会得点集計プログラムVer._2.a.Program.VolleyBall["2H"].GroupLocation = "G2";
-        球技大会得点集計プログラムVer._2.a.Program.VolleyBall["2B"].GroupLocation = "G3";
-        球技大会得点集計プログラムVer._2.a.Program.VolleyBall["1C"].GroupLocation = "H1";
-        球技大会得点集計プログラムVer._2.a.Program.VolleyBall["2F"].GroupLocation = "H2";
-        球技大会得点集計プログラムVer._2.a.Program.VolleyBall["1G"].GroupLocation = "H3";
+        //球技大会得点集計プログラムVer._2.a.Program.VolleyGameTable2["A"][1] = "2A";
     }
 }
 
