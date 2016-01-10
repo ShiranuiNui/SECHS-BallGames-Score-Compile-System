@@ -11,7 +11,7 @@ using System.Diagnostics;
 namespace 球技大会得点集計プログラムVer._2.a
 {
     [Serializable()]
-    class PointData//得点データ基底クラス
+    abstract class PointData//得点データ基底クラス
     {
         public string ClassName { get; set; } = "";//クラスのグループ番号
         public int Point { get; set; } = 0;//総得点 TODO:これを使って決勝リーグ等を判定
@@ -33,8 +33,8 @@ namespace 球技大会得点集計プログラムVer._2.a
     [Serializable()]
     class GameTable
     {
-        public string LeftClassGroup { get; set; }
-        public string RightClassGroup { get; set; }
+        public string LeftClassName { get; set; } = "";
+        public string RightClassName { get; set; } = "";
         public bool IsEND { get; set; } = false;
         public bool IsNotElimination { get; set; } = false;
     }
@@ -42,6 +42,7 @@ namespace 球技大会得点集計プログラムVer._2.a
     class SavingDataBase//セーブ時に一時的にデータをまとめるクラス
     {
         public Dictionary<string, VolleyBall> VolleyBall;
+        public Dictionary<string, GameTable> VolleyGameTable;
     }
     class Program
     {
@@ -53,12 +54,15 @@ namespace 球技大会得点集計プログラムVer._2.a
         {"1A","2A","3A","4A","5A","6A","1B","2B","3B","4B","5B","6B","1C","2C","3C","4C","5C","6C","1D","2D","3D","4D","5D","6D",};
         static readonly string[] GROUPALPHABET = new string[]//VolleyBallData用に、グループでループさせる時に使う定数
         {"A","B","C","D","E","F","G","H" };
+        static readonly string[] VOLLEYBALL2015 = new string[]
+        {"2A","3E","3H","3F","3B","3A","1A","1F","2E", "3C", "3G", "1D", "3D", "2G", "1H", "1B", "2C","2D","1E","2H","2B","1C","2F","1G", };
+        static readonly int[] GAMETABLENUMBER = new int[] { 1, 2, 3, 1 };
+        static readonly string[] GAMETABLEALPHABET = new string[] { "A", "B", "C", "D", "E", "F", "G", "H" };
 
-        
 
-        //public static Dictionary<string, VolleyBall> VolleyBall;//Key=クラス名 Value=バレーボール得点データクラス
-        //public static Dictionary<string, GameTable> VolleyGameTable;
-        public static Dictionary<string,VolleyBall> VolleyBallData;//Key=グループ名 Value=(Key=グループ内番号 Value=各クラス得点データ（VolleyBallクラス))
+
+        public static Dictionary<string, VolleyBall> VolleyBall;//Key=クラス名 Value=バレーボールクラス毎得点データクラス
+        public static Dictionary<string, GameTable> VolleyGameTable;//Key=試合コード Ex:（"A1") Value=バレーボール試合毎データクラス
 
         static void Main(string[] args)
         {
@@ -72,7 +76,8 @@ namespace 球技大会得点集計プログラムVer._2.a
                 BinaryFormatter f = new BinaryFormatter();
                 SavingDataBase InDataBase = (SavingDataBase)f.Deserialize(fs);
                 fs.Close();
-                VolleyBallData = InDataBase.VolleyBall;
+                VolleyBall = InDataBase.VolleyBall;
+                VolleyGameTable = InDataBase.VolleyGameTable;
             }
             catch //セーブしてあるファイルが無かったら初期化して生成
             {
@@ -90,13 +95,11 @@ namespace 球技大会得点集計プログラムVer._2.a
                 Console.WriteLine("プログラムの終了→7");//実装済み
                 string strInputKey = Console.ReadLine();
                 int intInputKey = ShiraAuxiliarySys.StrIntConv(strInputKey);
-                //int intInputKey = 5;//Debug
                 switch (intInputKey)
                 {
-                    /*case 1:
+                    case 1:
                         VolleyBallMode();
                         break;
-                        */
                     case 3:
                         TableTennis();
                         break;
@@ -111,15 +114,11 @@ namespace 球技大会得点集計プログラムVer._2.a
                         ExitMode();
                         IsExit = true;
                         break;
-                    case 8:
-                        DebugMode.VolleyBallSet2015();
-                        break;
                     default:
                         break;
-
                 }
             }
-        }/*
+        }
         static void VolleyBallMode()//バレーボール処理モード TODO:集計の実装、クラス表示バグの修正
         {
             Console.WriteLine();
@@ -134,12 +133,11 @@ namespace 球技大会得点集計プログラムVer._2.a
                 string strInputKey = Console.ReadLine();
                 int intInputKey = ShiraAuxiliarySys.StrIntConv(strInputKey);
                 Console.WriteLine();
-                //int intInputKey = 5;//Debug
                 switch (intInputKey)
                 {
                     case 1:
-
-                        //string[] GameName = VolleyGameTable.Where(x => x.Value.IsEND == false).Select(x => x.Key).ToArray();//コート名の取得
+                        //string[] LeftClassGroup = VolleyBallData.OrderBy(x => x.Value.OrderNumber1).Select(x => x.Key).ToArray();
+                        /*
                         string[] GameName = VolleyGameTable.Where(x => x.Value.IsEND == false).Select(x => x.Key).ToArray();
                         string[] LeftClassGroup = VolleyGameTable.Where(x => x.Value.IsEND == false).Select(x => x.Value.LeftClassGroup).ToArray();
                         List<string> listLeftClassName = new List<string>();//クラス名の取得
@@ -176,13 +174,14 @@ namespace 球技大会得点集計プログラムVer._2.a
 
                         Console.WriteLine("入力処理が正常に終了しました");
                         VolleyGameTable[GameName[inGameNumber]].IsEND = true;
+                        */
                         Console.WriteLine();
                         break;
+                        /*
                     case 2:
-                        foreach (string Class in CLASSLOOPER)
-                        {
-                            Console.WriteLine("{0} : {1}", Class, VolleyBall[Class].Point);
-                        }
+                        string[] ClassNameSorted = VolleyBallData.OrderBy(x => x.Value.ClassName).Select(x => x.Value.ClassName).ToArray();
+                        int[] PointSorted = VolleyBallData.OrderBy(x => x.Value.ClassName).Select(x => x.Value.Point).ToArray();
+                        Enumerable.Range(0, 24).ToList().ForEach(x => Console.WriteLine("{0} : {1}", ClassNameSorted[x], PointSorted[x]));
                         Console.WriteLine();
                         break;
                     case 3:
@@ -192,9 +191,10 @@ namespace 球技大会得点集計プログラムVer._2.a
                         Console.WriteLine("クラスのグループ番号を入力して下さい");
                         string InputGroup = Console.ReadLine();
                         InputGroup = ShiraAuxiliarySys.StrStrConv(InputGroup);
-                        VolleyBall[InputClass].GroupLocation = InputGroup;
+                        VolleyBallData[InputGroup].ClassName = InputClass;
                         Console.WriteLine();
                         break;
+                        */
                     case 4:
                         InitializeMode();
                         break;
@@ -207,7 +207,6 @@ namespace 球技大会得点集計プログラムVer._2.a
                 //VolleyBall[VolleyBall.Where(y => y.Value.GroupLocation == "A1").Select(x => x.Key).First()]
             }
         } //TODO:点数入力の完成
-        */
         static void TableTennis()
         {
             Console.WriteLine();
@@ -230,7 +229,7 @@ namespace 球技大会得点集計プログラムVer._2.a
             Console.WriteLine();
             //List<Dictionary<int, VolleyBall>> list = VolleyBallData.Select(x => x.Value).ToList();
             List<int> VolleyPoint = new List<int>();
-            foreach(string Group in GROUPALPHABET)
+            foreach (string Group in GROUPALPHABET)
             {
                 //VolleyPoint.Add()
             }
@@ -238,24 +237,28 @@ namespace 球技大会得点集計プログラムVer._2.a
         }
         static void InitializeMode()//初期化モード TODO:種目追加
         {
-            if (VolleyBallData != null)
+            if (VolleyBall != null)
             {
-                VolleyBallData.Clear();
+                VolleyBall.Clear();
             }
             Console.WriteLine();
             Console.WriteLine("初期化中……");
-            VolleyBallData = new Dictionary<string,  VolleyBall>();
-            foreach(string Group in GROUPALPHABET)
-            {
-                Enumerable.Range(1, 3).ToList().ForEach(x => VolleyBallData.Add(Group + x.ToString(), new VolleyBall()));
-            }
+
+            VolleyBall = new Dictionary<string, VolleyBall>();
+            Enumerable.Range(0, 24).ToList().ForEach(x => VolleyBall.Add(CLASSLOOPER[x], new VolleyBall()));
+            VolleyGameTable = new Dictionary<string, GameTable>();
+            Enumerable.Range(0, 24).ToList().ForEach(x => VolleyGameTable.Add(GROUPLOOPER[x], new GameTable()));
+
+
+
             Console.WriteLine("初期化処理正常終了！");
             Console.WriteLine();
         }
         static void ExitMode()//終了処理モード
         {
             SavingDataBase SavingDataBase = new SavingDataBase();
-            SavingDataBase.VolleyBall = VolleyBallData;
+            SavingDataBase.VolleyBall = VolleyBall;
+            SavingDataBase.VolleyGameTable = VolleyGameTable;
             String CurrentDir = System.Reflection.Assembly.GetExecutingAssembly().Location;
             string path = CurrentDir + @"\..\球技大会データ.db";
             FileStream fs = new FileStream(path, FileMode.Create, FileAccess.Write);
@@ -299,11 +302,5 @@ static class ShiraAuxiliarySys//補助的な処理を詰め込んでるだけ
     }
     //ここまで↑
 }
-static class DebugMode
-{
-    public static void VolleyBallSet2015()
-    {
-        //球技大会得点集計プログラムVer._2.a.Program.VolleyGameTable2["A"][1] = "2A";
-    }
-}
+
 
