@@ -112,7 +112,7 @@ namespace 球技大会得点集計プログラムVer._2.a
                         VolleyBallMode.SelectSequence();
                         break;
                     case 3:
-                        TableTennis();
+                        TableTennisMode.SelectSequence();
                         break;
                     case 5:
                         CompileShowMode();
@@ -128,23 +128,6 @@ namespace 球技大会得点集計プログラムVer._2.a
                         break;
                 }
             }
-        }
-        static void TableTennis()
-        {
-            Console.WriteLine();
-            Console.WriteLine("卓球モードに移行しました。処理別コードを入力してください");
-            for (bool IsExit = false; IsExit == false;)
-            {
-                Console.WriteLine("点数の入力→1");//詳細情報待ち
-                Console.WriteLine("現在の集計結果の表示→2");//詳細情報、上の完成待ち
-                Console.WriteLine("クラスの設定→3");//実装済み
-                Console.WriteLine("初期化→4");//実装済み
-                Console.WriteLine("処理種目別コード入力画面に戻る→5");//実装済み
-                string strInputKey = Console.ReadLine();
-                int intInputKey = ShiraAuxiliarySys.StrIntConv(strInputKey);
-                Console.WriteLine();
-            }
-
         }
         static void CompileShowMode()//総合得点表示モード TODO:種目追加
         {
@@ -235,7 +218,7 @@ namespace 球技大会得点集計プログラムVer._2.a
             for (int j = 0; j < GameName.Count(); j++)
             {
 
-                Console.WriteLine("{0}グループ 第{1}試合 {2} vs {3} → {4}", GameName[j].Substring(0, 1), GameName[j].Substring(1), LeftClassName[j], RightClassName[j], j);
+                Console.WriteLine($"{GameName[j].Substring(0, 1)}グループ 第{GameName[j].Substring(1)}試合 {LeftClassName[j]} vs {RightClassName[j]} → {j.ToString()}");
             }
             Console.WriteLine("試合を選択して下さい");//コートの選択
             int inGameNumber = ShiraAuxiliarySys.StrIntConv(Console.ReadLine());
@@ -301,6 +284,28 @@ namespace 球技大会得点集計プログラムVer._2.a
         {
             int[] Point = VolleyBall.Select(x => x.Value.Point).ToArray();
             return Point;
+        }
+    }
+    internal static class TableTennisMode
+    {
+        internal static Dictionary<string, TableTennis> TableTennis { get; set; }//Key=クラス名 Value=卓球クラス毎得点データクラス
+        internal static Dictionary<string, GameTable> TableTennisGameTable { get; set; }//Key=試合コード Ex:（"A1") Value=卓球試合毎データクラス
+
+        internal static void SelectSequence()
+        {
+            Console.WriteLine();
+            Console.WriteLine("卓球モードに移行しました。処理別コードを入力してください");
+            for (bool IsExit = false; IsExit == false;)
+            {
+                Console.WriteLine("点数の入力→1");//詳細情報待ち
+                Console.WriteLine("現在の集計結果の表示→2");//詳細情報、上の完成待ち
+                Console.WriteLine("クラスの設定→3");//実装済み
+                Console.WriteLine("初期化→4");//実装済み
+                Console.WriteLine("処理種目別コード入力画面に戻る→5");//実装済み
+                string strInputKey = Console.ReadLine();
+                int intInputKey = ShiraAuxiliarySys.StrIntConv(strInputKey);
+                Console.WriteLine();
+            }
         }
     }
     internal static class ShiraAuxiliarySys//補助的な処理を詰め込んでるだけ
