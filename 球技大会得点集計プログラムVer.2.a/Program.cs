@@ -34,9 +34,38 @@ namespace 球技大会得点集計プログラムVer._2.a
     [Serializable()]
     internal abstract class PointData//得点データ基底クラス
     {
-        internal int Point { get; set; } = 0;//総得点 TODO:これを使って決勝リーグ等を判定
+        private int LeaguePoint = 0;//競技順位別の得点 TODO:これを使って決勝リーグ等を判定
+        internal int GetPoint { get; set; } = 0;//総得点
         internal int LostPoint { get; set; } = 0;//総失点
         internal int WinLose { get; set; } = 0;//勝敗。+1が勝利、-1が敗北を意味する
+        internal void SetLeaguePoint(int InRank)
+        {
+            switch(InRank)
+            {
+                case 16:
+                    LeaguePoint = 5;
+                    break;
+                case 8:
+                    LeaguePoint = 10;
+                    break;
+                case 4:
+                    LeaguePoint = 15;
+                    break;
+                case 3:
+                    LeaguePoint = 20;
+                    break;
+                case 2:
+                    LeaguePoint = 25;
+                    break;
+                case 1:
+                    LeaguePoint = 30;
+                    break;
+            }
+        }
+        internal int GetLeaguePoint()
+        {
+            return LeaguePoint;
+        }
     }
     [Serializable()]
     internal class VolleyBall : PointData//バレーボールデータクラス：得点データ基底クラスからの派生クラス
@@ -223,28 +252,31 @@ namespace 球技大会得点集計プログラムVer._2.a
             Console.WriteLine("試合を選択して下さい");//コートの選択
             int inGameNumber = ShiraAuxiliarySys.StrIntConv(Console.ReadLine());
 
-            /*
+
             //TODO：バレーの場合はセット毎の得点入力が必要。入力後に計算処理も！
-            Console.WriteLine("試合選択をやり直す場合は0を入力して下さい");
-            Console.WriteLine("{0}の点数を入力してください", listLeftClassName[inGameNumber]);
-            int LeftClassScore = ShiraAuxiliarySys.StrIntConv(Console.ReadLine());//点数の入力
-            if (LeftClassScore == 0) { Console.WriteLine(); break; }
-            VolleyBall[listLeftClassName[inGameNumber]].Point += LeftClassScore;
+            for (int CountSet = 1; CountSet <= 4; CountSet++)
+            {
+                Console.WriteLine("試合選択をやり直す場合は0を入力して下さい");
+                Console.WriteLine("{0}の点数を入力してください", LeftClassName[inGameNumber]);
+                int LeftClassScore = ShiraAuxiliarySys.StrIntConv(Console.ReadLine());//点数の入力
+                if (LeftClassScore == 0) { Console.WriteLine(); break; }
+                VolleyBall[LeftClassName[inGameNumber]].GetPoint += LeftClassScore;
 
-            Console.WriteLine("{0}の点数を入力してください", listRightClassName[inGameNumber]);
-            int RightClassScore = ShiraAuxiliarySys.StrIntConv(Console.ReadLine());//点数の入力
-            if (LeftClassScore == 0) { Console.WriteLine(); break; }
-            VolleyBall[listRightClassName[inGameNumber]].Point += RightClassScore;
+                Console.WriteLine("{0}の点数を入力してください", RightClassName[inGameNumber]);
+                int RightClassScore = ShiraAuxiliarySys.StrIntConv(Console.ReadLine());//点数の入力
+                if (LeftClassScore == 0) { Console.WriteLine(); break; }
+                VolleyBall[RightClassName[inGameNumber]].GetPoint += RightClassScore;
 
-            Console.WriteLine("入力処理が正常に終了しました");
-            VolleyGameTable[GameName[inGameNumber]].IsEND = true;
-            */
-            Console.WriteLine();
+                Console.WriteLine("入力処理が正常に終了しました");
+                VolleyGameTable[GameName[inGameNumber]].IsEND = true;
+                Console.WriteLine();
+            }
+            SelectSequence();
         }
         private static void ShowScoreMode()
         {
             string[] ClassNameSorted = VolleyBall.OrderBy(x => x.Key).Select(x => x.Key).ToArray();
-            int[] PointSorted = VolleyBall.OrderBy(x => x.Key).Select(x => x.Value.Point).ToArray();
+            int[] PointSorted = VolleyBall.OrderBy(x => x.Key).Select(x => x.Value.GetLeaguePoint()).ToArray();
             Enumerable.Range(0, 24).ToList().ForEach(x => Console.WriteLine("{0} : {1}", ClassNameSorted[x], PointSorted[x]));
             Console.WriteLine();
         }
@@ -282,7 +314,7 @@ namespace 球技大会得点集計プログラムVer._2.a
         }
         internal static int[] PointOutputForShow()
         {
-            int[] Point = VolleyBall.Select(x => x.Value.Point).ToArray();
+            int[] Point = VolleyBall.Select(x => x.Value.GetLeaguePoint()).ToArray();
             return Point;
         }
     }
